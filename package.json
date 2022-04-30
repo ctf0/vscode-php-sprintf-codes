@@ -3,7 +3,7 @@
     "displayName": "Php Sprintf Codes",
     "description": "Show the definition for sprintf codes on hover",
     "publisher": "ctf0",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "engines": {
         "vscode": "^1.66.2"
     },
@@ -12,19 +12,120 @@
         "Other"
     ],
     "activationEvents": [
-        "onLanguage:php",
-        "onLanguage:blade",
-        "onLanguage:twig",
-        "onLanguage:stub"
+        "onStartupFinished"
     ],
     "main": "./dist/extension.js",
     "contributes": {
+        "configuration": {
+            "type": "object",
+            "title": "Php Sprintf Codes",
+            "properties": {
+                "phpSprintfCodes.docs_link": {
+                    "type": "string",
+                    "default": "https://www.php.net/manual/en/function.sprintf.php",
+                    "description": "sprintf docs link"
+                },
+                "phpSprintfCodes.codes": {
+                    "type": "array",
+                    "items": {
+                        "required": [
+                            "label",
+                            "description"
+                        ],
+                        "type": "object"
+                    },
+                    "properties": {
+                        "label": {
+                            "type": "string",
+                            "description": "code"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "code type & details"
+                        }
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "default": [
+                        {
+                            "label": "%%",
+                            "description": "A percent sign"
+                        },
+                        {
+                            "label": "%b",
+                            "description": "Binary number"
+                        },
+                        {
+                            "label": "%c",
+                            "description": "The character according to the ASCII value"
+                        },
+                        {
+                            "label": "%d",
+                            "description": "Signed decimal number (negative, zero or positive)"
+                        },
+                        {
+                            "label": "%e",
+                            "description": "Scientific notation using a lowercase (e.g. 1.2e+2)"
+                        },
+                        {
+                            "label": "%E",
+                            "description": "Scientific notation using a uppercase (e.g. 1.2E+2)"
+                        },
+                        {
+                            "label": "%u",
+                            "description": "Unsigned decimal number (equal to or greater than zero)"
+                        },
+                        {
+                            "label": "%f",
+                            "description": "Floating-point number (local settings aware)"
+                        },
+                        {
+                            "label": "%F",
+                            "description": "Floating-point number (not local settings aware)"
+                        },
+                        {
+                            "label": "%g",
+                            "description": "shorter of %e and %f"
+                        },
+                        {
+                            "label": "%G",
+                            "description": "shorter of %E and %f"
+                        },
+                        {
+                            "label": "%o",
+                            "description": "Octal number"
+                        },
+                        {
+                            "label": "%s",
+                            "description": "String"
+                        },
+                        {
+                            "label": "%x",
+                            "description": "Hexadecimal number (lowercase letters)"
+                        },
+                        {
+                            "label": "%X",
+                            "description": "Hexadecimal number (uppercase letters)"
+                        }
+                    ],
+                    "description": "codes & description"
+                }
+            }
+        },
         "commands": [
             {
                 "command": "php-sprintf.search",
-                "title": "Sprintf Search"
+                "title": "Php Sprintf Search"
             }
-        ]
+        ],
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "php-sprintf.search",
+                    "when": "editorLangId =~ /(php|blade|twig|stub)/"
+                }
+            ]
+        }
     },
     "capabilities": {
         "hoverProvider": "true"

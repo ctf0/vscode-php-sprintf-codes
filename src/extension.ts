@@ -1,26 +1,32 @@
 import * as vscode from "vscode";
-import sprintfCodes from "./codes";
 
 export function activate(context: vscode.ExtensionContext) {
+    readConfig()
+
+    // config
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
+        if (e.affectsConfiguration(PACKAGE_NAME)) {
+            readConfig()
+        }
+    })
+
     context.subscriptions.push(
         vscode.languages.registerHoverProvider('*', {
             provideHover(document, position) {
-                const char = document.getText(document.getWordRangeAtPosition(position, /%\w/));
+                const hoveredCode = document.getText(document.getWordRangeAtPosition(position, /%\w/));
 
-                if (char) {
-                    const code = Object.keys(sprintfCodes).find((key) => key === char);
-                    if (!code) return;
+                if (hoveredCode) {
+                    const codeInfo = sprintfCodes.find((item: any) => item.label === hoveredCode)
 
-                    const codeInfo = sprintfCodes[code];
+                    if (codeInfo) {
+                        const markdown = new vscode.MarkdownString();
+                        markdown.isTrusted = true;
+                        markdown.appendMarkdown(
+                            `php-sprintf: \`${codeInfo.label}\` *[${codeInfo.description}](https://www.php.net/manual/en/function.sprintf.php)*`
+                        );
 
-                    const markdown = new vscode.MarkdownString();
-                    markdown.isTrusted = true;
-
-                    markdown.appendMarkdown(
-                        `php-sprintf: \`${codeInfo.title}\` *[${codeInfo.description}](https://www.php.net/manual/en/function.sprintf.php)*`
-                    );
-
-                    return new vscode.Hover(markdown);
+                        return new vscode.Hover(markdown);
+                    }
                 };
 
                 return
@@ -32,17 +38,11 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "php-sprintf.search",
             async () => {
-                const codes = Object.values(sprintfCodes);
-
-                let items: any = []
-                codes.map((c) => items.push({
-                    label: c.title,
-                    description: c.description
-                }))
-
+                let items = sprintfCodes
                 let moreInfo = 'More Info'
+
                 let quickPick = vscode.window.createQuickPick()
-                quickPick.placeholder = 'enter code...'
+                quickPick.placeholder = 'search label or description ...'
                 quickPick.matchOnDescription = true
                 quickPick.canSelectMany = true
 
@@ -62,7 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
 
                         if (quickPick.selectedItems.some((item) => item.label == moreInfo)) {
                             vscode.env.openExternal(
-                                vscode.Uri.parse('https://www.php.net/manual/en/function.sprintf.php')
+                                vscode.Uri.parse(docs_link)
                             )
                         }
                     }
@@ -74,6 +74,19 @@ export function activate(context: vscode.ExtensionContext) {
             }
         )
     );
+}
+
+/* Config ------------------------------------------------------------------- */
+export const PACKAGE_NAME = 'phpSprintfCodes'
+let config
+let docs_link: string
+let sprintfCodes: any
+
+export function readConfig() {
+    config = vscode.workspace.getConfiguration(PACKAGE_NAME)
+
+    docs_link = config.docs_link
+    sprintfCodes = config.codes
 }
 
 export function deactivate() {}
