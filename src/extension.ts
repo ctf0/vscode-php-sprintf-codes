@@ -3,14 +3,14 @@ import * as vscode from "vscode";
 export function activate(context: vscode.ExtensionContext) {
     readConfig()
 
-    // config
-    vscode.workspace.onDidChangeConfiguration(async (e) => {
-        if (e.affectsConfiguration(PACKAGE_NAME)) {
-            readConfig()
-        }
-    })
-
     context.subscriptions.push(
+        // config
+        vscode.workspace.onDidChangeConfiguration(async (e) => {
+            if (e.affectsConfiguration(PACKAGE_NAME)) {
+                readConfig()
+            }
+        }),
+        // hover
         vscode.languages.registerHoverProvider('*', {
             provideHover(document, position) {
                 const hoveredCode = document.getText(document.getWordRangeAtPosition(position, /%\w/));
@@ -31,62 +31,55 @@ export function activate(context: vscode.ExtensionContext) {
 
                 return
             }
-        })
-    );
+        }),
+        // cmnd
+        vscode.commands.registerCommand("php-sprintf.search", async () => {
+            let items = sprintfCodes
+            let moreInfo = 'More Info'
 
-    context.subscriptions.push(
-        vscode.commands.registerCommand(
-            "php-sprintf.search",
-            async () => {
-                let items = sprintfCodes
-                let moreInfo = 'More Info'
+            let quickPick = vscode.window.createQuickPick()
+            quickPick.placeholder = 'search label or description ...'
+            quickPick.matchOnDescription = true
+            quickPick.canSelectMany = true
 
-                let quickPick = vscode.window.createQuickPick()
-                quickPick.placeholder = 'search label or description ...'
-                quickPick.matchOnDescription = true
-                quickPick.canSelectMany = true
+            items.push({ label: 'Visit Docs', kind: vscode.QuickPickItemKind.Separator })
+            items.push({ label: moreInfo })
 
-                items.push({label: 'Visit Docs' , kind: vscode.QuickPickItemKind.Separator})
-                items.push({label: moreInfo})
+            quickPick.items = items
 
-                quickPick.items = items
+            quickPick.onDidAccept(() => {
+                if (quickPick.selectedItems.length) {
+                    let val = quickPick.selectedItems
+                        .filter((item) => item.label !== moreInfo)
+                        .map((item) => item.label)
+                        .join('')
 
-                quickPick.onDidAccept(() => {
-                    if (quickPick.selectedItems.length) {
-                        let val = quickPick.selectedItems
-                                .filter((item) => item.label !== moreInfo)
-                                .map((item) => item.label)
-                                .join('')
+                    vscode.env.clipboard.writeText(val)
 
-                        vscode.env.clipboard.writeText(val)
-
-                        if (quickPick.selectedItems.some((item) => item.label == moreInfo)) {
-                            vscode.env.openExternal(
-                                vscode.Uri.parse(docs_link)
-                            )
-                        }
+                    if (quickPick.selectedItems.some((item) => item.label == moreInfo)) {
+                        vscode.env.openExternal(
+                            vscode.Uri.parse(config.docs_link)
+                        )
                     }
+                }
 
-                    quickPick.dispose()
-                });
+                quickPick.dispose()
+            });
 
-                quickPick.show();
-            }
-        )
+            quickPick.show();
+        })
     );
 }
 
 /* Config ------------------------------------------------------------------- */
 export const PACKAGE_NAME = 'phpSprintfCodes'
 let config
-let docs_link: string
 let sprintfCodes: any
 
 export function readConfig() {
     config = vscode.workspace.getConfiguration(PACKAGE_NAME)
 
-    docs_link = config.docs_link
     sprintfCodes = config.codes
 }
 
-export function deactivate() {}
+export function deactivate() { }
